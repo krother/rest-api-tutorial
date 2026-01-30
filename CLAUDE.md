@@ -28,6 +28,7 @@ uv run make html
 ## Writing Guidelines
 
 - each chapter consists of one README.rst file
+- each chapter has a topic:: directive goal section at the top
 - use === headings for chapter titles
 - use --- headings for exercises
 - each exercise starts with the word "Exercise <number>:"

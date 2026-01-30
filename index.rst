@@ -14,8 +14,11 @@ The tutorial is tailored towards participants with intermediate knowledge of Pyt
    :maxdepth: 1
 
    01-hello-world/README.rst
-   02-pydantic
-   03-async
+   02-pydantic/README.rst
+   03-auth/README.rst
+   04-test/README.rst
+   08-error-handling/README.rst
+   12-async/README.rst
    links.rst
 
 
