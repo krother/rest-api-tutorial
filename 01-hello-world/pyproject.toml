@@ -1,0 +1,12 @@
+[project]
+name = "rest-api"
+version = "0.1.0"
+description = "A tutorial for crafting REST APIs with Python and FastAPI"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "fastapi[standard]>=0.127.1",
+    "httpx>=0.28.1",
+    "pydantic>=2.12.5",
+    "uvicorn>=0.40.0",
+]
