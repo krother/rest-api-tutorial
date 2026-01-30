@@ -374,17 +374,19 @@ Try different values and see how the predictions change:
 - Small body mass (3500) with short beak → likely Adelie
 - Medium body mass with long beak → likely Chinstrap
 
-**Bonus: Add input validation**
 
-Enhance your model with validation to reject unrealistic values:
+Exercise 6. send request with postman
+-------------------------------------
 
-.. code-block:: python
+install postman.
 
-    from pydantic import BaseModel, Field
+send a POST request to the /order/ endpoint. Set the **Body** of the request, using the **raw JSON** type:
 
-    class PredictionInput(BaseModel):
-        body_mass: float = Field(gt=2000, lt=7000, description="Body mass in grams")
-        beak_length: float = Field(gt=30, lt=60, description="Beak length in mm")
+{
+    "name": "cat",
+    "quantity": 7
+}
+
 
 
 Reflection Questions
