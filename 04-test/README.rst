@@ -7,11 +7,10 @@ Testing
    Run automated tests of a REST API.
 
 Automated tests help you verify that your API works correctly
-and continues to work as you make changes.
-In this chapter, you will learn how to use static analysis tools
-and write tests for FastAPI endpoints.
+and continues to work as you extend or refactor.
+In this chapter, you use static analysis tools
+and write unit tests for FastAPI endpoints.
 
-----
 
 Exercise 1: Static Checks
 -------------------------
@@ -22,6 +21,8 @@ Install three essential tools:
 .. code-block:: bash
 
     uv add --dev ty black ruff
+
+Inspect the ``pyproject.toml`` file and see what changed.
 
 **ty** is a type checker that verifies your type hints are consistent:
 
@@ -43,13 +44,12 @@ Install three essential tools:
 
 Run all three commands on your project and fix any issues they report.
 
-----
-
 Exercise 2: Create a Test
 -------------------------
 
-FastAPI provides a ``TestClient`` for testing endpoints without starting a server.
-Create a file ``tests/test_api.py``:
+FastAPI provides a ``TestClient`` for testing endpoints without actually starting a server.
+It is fully compatible with the ``pytest`` library.
+Create a file ``tests/test_app.py``:
 
 .. code-block:: python
 
@@ -62,7 +62,7 @@ Create a file ``tests/test_api.py``:
     def test_root():
         response = client.get("/")
         assert response.status_code == 200
-        assert response.json() == {"Hello": "World"}
+        assert response.json() == {"Hello": "Mars"}
 
 Install pytest and run the test:
 
@@ -71,9 +71,7 @@ Install pytest and run the test:
     uv add --dev pytest
     uv run pytest
 
-You should see the test pass. Try changing the expected response to see a failing test.
-
-----
+You should see the test fail. Try changing the expected response to see a passing test.
 
 Exercise 3: Test POST Endpoints
 -------------------------------
@@ -92,12 +90,15 @@ Test your prediction endpoint by sending a POST request with JSON data:
         assert "species" in data
         assert "probability" in data
 
-**Your task:** Write tests that verify:
+Write additional tests that verify:
 
-1. The endpoint returns a 422 error for invalid input (missing required fields)
-2. The endpoint returns a 422 error for out-of-range values (if you added validators)
+- The endpoint returns a 422 error for invalid input (missing required fields)
+- The endpoint returns a 422 error for out-of-range values (if you added validators)
 
-----
+.. note::
+
+   Should you test the actual probability values? Why or why not?
+
 
 Exercise 4: Fixtures
 --------------------
@@ -118,36 +119,35 @@ Create a file ``tests/conftest.py`` with shared fixtures:
 
 
     @pytest.fixture
-    def valid_penguin_data():
+    def valid_penguin():
         return {
             "body_mass": 4200.0,
-            "beak_length": 39.0,
+            "bill_length": 39.0,
             "flipper_length": 195.0,
             "island": "Biscoe"
         }
 
 
     @pytest.fixture
-    def invalid_penguin_data():
+    def invalid_penguin():
         return {
             "body_mass": "not a number",
-            "beak_length": 39.0
+            "bill_length": 39.0
         }
 
 Now use fixtures in your tests:
 
 .. code-block:: python
 
-    def test_predict_with_valid_data(client, valid_penguin_data):
-        response = client.post("/predict", json=valid_penguin_data)
+    def test_predict_with_valid_data(client, valid_penguin):
+        response = client.post("/predict", json=valid_penguin)
         assert response.status_code == 200
 
 
-    def test_predict_with_invalid_data(client, invalid_penguin_data):
-        response = client.post("/predict", json=invalid_penguin_data)
+    def test_predict_with_invalid_data(client, invalid_penguin):
+        response = client.post("/predict", json=invalid_penguin)
         assert response.status_code == 422
 
-----
 
 Exercise 5: Refactor for Testability
 ------------------------------------
@@ -157,34 +157,27 @@ Create a ``predict.py`` module:
 
 .. code-block:: python
 
-    def predict_species(body_mass: float, beak_length: float) -> str:
-        """Predict penguin species based on measurements."""
-        if body_mass > 4500 and beak_length > 45:
-            return "Gentoo"
-        elif beak_length < 40:
-            return "Adelie"
-        else:
-            return "Chinstrap"
+   def predict_species(request: PenguinPredictionRequest) -> PredictionOutput:
+       ...
 
+Move all necessary codes and imports to ``predict.py``.
 Now you can test the prediction logic directly:
 
 .. code-block:: python
 
     from predict import predict_species
 
-
     def test_predict_gentoo():
-        result = predict_species(body_mass=5000.0, beak_length=50.0)
-        assert result == "Gentoo"
-
+        result = predict_species(PenguinPredictionRequest(body_mass=5000.0, bill_length=50.0))
+        assert result.species == "Gentoo"
 
     def test_predict_adelie():
-        result = predict_species(body_mass=3500.0, beak_length=35.0)
-        assert result == "Adelie"
+        ...
+        # insert data that firmly results in a predicted "Adelie" penguin
 
 This approach makes unit tests faster and easier to write.
+Also, your code in ``app.py`` becomes leaner.
 
-----
 
 Exercise 6: Mocking
 -------------------
@@ -204,34 +197,56 @@ Mock the prediction function to test the endpoint independently:
 
     from unittest.mock import patch
 
-
-    def test_endpoint_with_mocked_prediction(client, valid_penguin_data):
-        with patch("app.predict_species", return_value="Gentoo"):
-            response = client.post("/predict", json=valid_penguin_data)
+    def test_endpoint_with_mocked_prediction(client, valid_penguin, valid_prediction):
+        with patch("app.predict_species", return_value=valid_prediction):
+            response = client.post("/penguins/predict", json=valid_penguin)
             assert response.status_code == 200
             assert response.json()["species"] == "Gentoo"
+
+Add a **fixture** ``valid_prediction`` so that the test passes.
 
 You can also use the ``mocker`` fixture from pytest-mock:
 
 .. code-block:: python
 
     def test_with_mocker(client, valid_penguin_data, mocker):
-        mocker.patch("app.predict_species", return_value="Chinstrap")
-        response = client.post("/predict", json=valid_penguin_data)
-        assert response.json()["species"] == "Chinstrap"
+        mocker.patch("app.predict_species", return_value=valid_prediction):
+        ...
 
-**Your task:** Mock a prediction to always return ``"Adelie"`` and verify the response.
 
-----
+Exercise 7: Test Coverage
+-------------------------
+
+As a final check, analyze whether all code has been tested.
+Install pytest-cov:
+
+.. code-block:: bash
+
+    uv add --dev pytest-cov
+
+Then run:
+
+.. code-block:: bash
+
+    uv run pytest --cov
+
+To find out which lines have been missed out, try:
+
+.. code-block:: bash
+ 
+   uv run coverage html
+
+Open the file ``htmlcov/index.html`` in a browser.  
+
 
 Reflection Questions
 --------------------
 
-1. **Test coverage**: How do you know if you have enough tests?
-
-2. **Test speed**: Why is it useful to have tests that don't require HTTP requests?
-
-3. **Mocking**: When should you mock, and when should you test the real implementation?
+- What information does a passing test give you?
+- What information does a failing test give you?
+- How much testing is enough?
+- Why is it useful to have tests that don't require HTTP requests?
+- Discuss the statement *"only mock what you own."*
 
 .. seealso::
 
