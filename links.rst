@@ -1,51 +1,55 @@
 
-FastAPI homepage
-Pydantic homepage
+Links and Resources
+===================
 
-- https://www.python4data.science/en/latest/data-processing/apis/fastapi/extensions.html
+Official Documentation
+----------------------
 
-OpenAPI specification (OAS) in yaml https://pretalx.com/redirect/?url=https%3A//openapi-generator.tech/docs/installation/%3AQsNmmv33LY3yrgBQQYbEWrWZJt1jjfXa7KcAus8iv-Y
+- `FastAPI <https://fastapi.tiangolo.com/>`_
+- `Pydantic <https://docs.pydantic.dev/>`_
+- `OpenAPI Specification <https://spec.openapis.org/oas/latest.html>`_
 
 
-1 Idempotent API
-↳ https://lnkd.in/erMkqwq4
+FastAPI Extensions
+------------------
 
-2 Redis Use Cases
-↳ https://lnkd.in/ekJMjMG3
+- `Python for Data Science: FastAPI Extensions <https://www.python4data.science/en/latest/data-processing/apis/fastapi/extensions.html>`_
 
-3 Saga Design Pattern Explained
-↳ https://lnkd.in/eFXC4-aJ
 
-4 Protocol Buffers vs JSON
-↳ https://lnkd.in/egcFxe2t
+API Design Patterns
+-------------------
 
-5 Concurrency vs Parallelism
-↳ https://lnkd.in/e9PHuw2e
+- `Idempotent APIs <https://lnkd.in/erMkqwq4>`_
+- `Saga Design Pattern <https://lnkd.in/eFXC4-aJ>`_
+- `Protocol Buffers vs JSON <https://lnkd.in/egcFxe2t>`_
 
-6 How Consistent Hashing Works
-↳ https://lnkd.in/eUP9DbCg
 
-7 Service Discovery Explained
-↳ https://lnkd.in/eCYYwQfU
+Architecture
+------------
 
-8 Monolith vs Microservices Architecture
-↳ https://lnkd.in/e3EBtg_v
+- `Monolith vs Microservices <https://lnkd.in/e3EBtg_v>`_
+- `Modular Monolith Architecture <https://lnkd.in/edUqkCKR>`_
+- `Microservices Lessons From Netflix <https://lnkd.in/eZSM3CRB>`_
+- `How API Gateway Works <https://lnkd.in/eMCr9VjE>`_
+- `Service Discovery <https://lnkd.in/eCYYwQfU>`_
 
-9 What Happens When You Type a URL Into Your Browser
-↳ https://lnkd.in/eusuDn5z
 
-10 How Databases Keep Passwords Securely
-↳ https://lnkd.in/edd8-N5k
+Performance and Scaling
+-----------------------
 
-11 How API Gateway Works
-↳ https://lnkd.in/eMCr9VjE
+- `Concurrency vs Parallelism <https://lnkd.in/e9PHuw2e>`_
+- `How Consistent Hashing Works <https://lnkd.in/eUP9DbCg>`_
+- `Redis Use Cases <https://lnkd.in/ekJMjMG3>`_
+- `Bloom Filters <https://lnkd.in/e2duES7s>`_
 
-12 Modular Monolith Architecture
-↳ https://lnkd.in/edUqkCKR
 
-13 Bloom Filters Explained
-↳ https://lnkd.in/e2duES7s
+Security
+--------
 
-14 Microservices Lessons From Netflix
-↳ https://lnkd.in/eZSM3CRB
+- `How Databases Keep Passwords Securely <https://lnkd.in/edd8-N5k>`_
 
+
+How the Web Works
+-----------------
+
+- `What Happens When You Type a URL Into Your Browser <https://lnkd.in/eusuDn5z>`_

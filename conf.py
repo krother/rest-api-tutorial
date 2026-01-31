@@ -21,9 +21,10 @@ extensions = [
     'sphinx_copybutton',
     'sphinx.ext.todo',
     'myst_parser',
+    'sphinxcontrib.mermaid',
     ]
 
-exclude_patterns = ['_build', 'Thumbs.db', 'learning_goals.md', 'README.md']
+exclude_patterns = ['.venv', '_build', 'Thumbs.db', 'learning_goals.md', 'README.md']
 
 language = 'en'
 
