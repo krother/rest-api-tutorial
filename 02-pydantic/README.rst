@@ -52,8 +52,8 @@ In this case it contains all data for the prediction:
         body_mass: float      # in grams
 
 
-    @app.post("/predict")
-    def predict_species(data: PredictionInput):
+    @app.post("/penguins/predict")
+    def predict_species(data: PenguinPredictionRequest):
         return "Adelie"  # dummy response
 
 Test that the validation works by sending invalid data:
@@ -61,7 +61,7 @@ Test that the validation works by sending invalid data:
 .. code-block:: bash
 
     # This should return a 422 error
-    curl -X POST http://localhost:8000/predict \
+    curl -X POST http://localhost:8000/penguins/predict \
          -H "Content-Type: application/json" \
          -d '{"body_mass": "not a number", "bill_length": 39.0}'
 
@@ -71,11 +71,11 @@ Notice how Pydantic automatically validates types and returns detailed error mes
 Exercise 3: Define a Response Model
 -----------------------------------
 
-Define another class ``PredictionOutput`` containing what the API will return:
+Define another class ``PenguinPredictionOutput`` containing what the API will return:
 
 .. code-block:: python
 
-    class PredictionOutput(BaseModel):
+    class PenguinPredictionOutput(BaseModel):
         species: str
         probability: float
 
@@ -83,11 +83,11 @@ Extend the POST endpoint accordingly. Note that we can use a **type hint** in th
 
 .. code-block:: python
 
-    @app.post("/predict", response_model=PredictionOutput)
-    def predict_species(data: PredictionInput) -> PredictionOutput:
+    @app.post("/penguins/predict", response_model=PenguinPredictionOutput)
+    def predict_species(data: PenguinPredictionRequest) -> PenguinPredictionOutput:
         ... 
 
-        return PredictionOutput(
+        return PenguinPredictionOutput(
             species=...,
             ...
         )
@@ -104,12 +104,12 @@ Complete the gaps:
 
 .. code-block:: python
 
-    @app.post("/penguins/predict", response_model=PredictionOutput)
+    @app.post("/penguins/predict", response_model=PenguinPredictionOutput)
     def predict_penguin(request: PenguinPredictionRequest):
         features = [[...]]
         species = model.predict(features)[0]
         prob = max(model.predict_proba(features)[0])
-        return PredictionOutput(...)
+        return PenguinPredictionOutput(...)
 
 Try different values and see how the predictions change.
 
@@ -122,7 +122,7 @@ Extend your model to include optional fields and fields with default values:
 
 .. code-block:: python
 
-    class PredictionInput(BaseModel):
+    class PenguinPredictionRequest(BaseModel):
         bill_length: float
         body_mass: float
         flipper_length: float | None = None  # optional, defaults to None
@@ -136,7 +136,7 @@ Here is an according curl request:
 .. code-block:: bash
 
     # Full request (all fields)
-    curl -X POST http://localhost:8000/predict \
+    curl -X POST http://localhost:8000/penguins/predict \
          -H "Content-Type: application/json" \
          -d '{"body_mass": 4200.0, "bill_length": 39.0, "flipper_length": 195.0, "island": "Dream"}'
 
@@ -153,13 +153,13 @@ Change the code so that the response of your endpoint looks like this:
 
 .. code-block:: python
 
-    return PredictionOutput(
+    return PenguinPredictionOutput(
         species=...,
         probability=...,
-        ModelMetadata(
+        metadata=ModelMetadata(
             model_name=str(model),
             version="1.0.0",
-            trained_on="2026-01-30"
+            trained_on="2026-01-30",
         )
     )
 
@@ -178,7 +178,7 @@ For a stricter quality check, configure your model to reject requests with unkno
 
     from pydantic import ConfigDict
 
-    class PredictionInput(BaseModel):
+    class PenguinPredictionRequest(BaseModel):
         model_config = ConfigDict(extra="forbid")
 
         bill_length: float
@@ -210,7 +210,7 @@ For even stricter quality checks, add a validator to ensure the penguin body mas
 
     from pydantic import field_validator
 
-    class PredictionInput(BaseModel):
+    class PenguinPredictionRequest(BaseModel):
         ...
 
         @field_validator("body_mass")
@@ -248,7 +248,7 @@ Pydantic offers two ways to add constraints without writing custom validators:
 
     from pydantic import Field
 
-    class PredictionInput(BaseModel):
+    class PenguinPredictionRequest(BaseModel):
         body_mass: float = Field(ge=100, le=20000, description="Body mass in grams")
         bill_length: float = Field(ge=30, le=60, description="Bill length in mm")
 
@@ -259,15 +259,15 @@ Pydantic offers two ways to add constraints without writing custom validators:
     from typing import Annotated
     from pydantic import Field
 
-    BodyMass = Annotated[float, Field(ge=100, le=20000, description="Body mass in grams")]
+    Probability = Annotated[float, Field(ge=0, le=1, description="Predicted proobability of a penguin species")]
 
-    class PredictionInput(BaseModel):
-        body_mass: BodyMass
-        ...
+
+    class PredictionOutput(BaseModel):
+        probability: Probability
 
 The ``Annotated`` approach lets you reuse type definitions across multiple models.
 
-**Your task:** Refactor your model to use ``Field`` constraints.
+**Your task:** Refactor your model to use ``Annotated`` constraints.
 Check the ``/docs`` page to see how the descriptions appear in the API documentation.
 
 ----
