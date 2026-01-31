@@ -3,7 +3,7 @@ name: deploy REST API course
 
 on:
   push:
-    branches: [ maing ]
+    branches: [ main ]
 
 jobs:
 
