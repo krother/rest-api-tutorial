@@ -1,24 +1,3 @@
-
-
-Day 2: Data Access and Storage
-On this day, participants extend the data layer of their application by adding endpoints and schemas for creating, uploading and reading datasets. They connect a database and structure the code following best practices for modularized code and documentation.
-
-Module 2.1: Data-centric APIs
-
-- nesting and inheriting models
-- get / put / update / delete endpoints
-- requesting paginated data
-- filtering
-- JSON payloads, form and file uploads
-- performance considerations
-
-Module 2.2: Database connections
-
-- object serialization with JSON
-- serialization to SQL
-- migrating databases and models
-- the Repository pattern
-- Object-Relational Mappers (ORM)
       
 Module 2.3: Structuring an API
 
