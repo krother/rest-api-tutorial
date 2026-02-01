@@ -17,6 +17,9 @@ The tutorial is tailored towards participants with intermediate knowledge of Pyt
    02-pydantic/README.rst
    03-auth/README.rst
    04-test/README.rst
+   05-crud/README.rst
+   06-repository/README.rst
+   07-bce/README.rst
    08-error-handling/README.rst
    12-async/README.rst
    13-best-practices/README.rst
