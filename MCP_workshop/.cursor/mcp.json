@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "cats-rag": {
+      "command": "uv",
+      "args": ["run", "python", "server.py"],
+      "cwd": "${workspaceFolder}/MCP_workshop",
+      "env": {
+        "MCP_TRANSPORT": "stdio"
+      }
+    }
+  }
+}

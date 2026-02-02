@@ -1,0 +1,23 @@
+# Environment and secrets
+.env
+
+# Virtual environment
+.venv/
+venv/
+
+# ChromaDB local database
+chroma_db/
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+
+# macOS
+.DS_Store
+
+# IDE
+.idea/
+
+# Logs
+*.log
