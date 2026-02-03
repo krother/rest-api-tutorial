@@ -21,7 +21,7 @@ The repository acts as a middleman between your API and the data storage.
 This allows you to swap out the storage backend without changing your API code.
 
 Pydantic Serialization
-++++++++++++++++++++++
+----------------------
 
 Pydantic models can be easily converted to and from JSON, which is useful for file-based storage and debugging.
 
@@ -29,96 +29,57 @@ Pydantic models can be easily converted to and from JSON, which is useful for fi
 
    from pydantic import BaseModel
 
-   class Task(BaseModel):
+   class Cat(BaseModel):
        id: int
-       title: str
-       completed: bool = False
+       name: str
+       color: str
 
-   task = Task(id=1, title="Buy groceries")
+   cat = Cat(id=1, name="Felix", color="orange")
 
-   # Convert to JSON string
-   json_str = task.model_dump_json()
+   # convert to JSON string
+   j = cat.model_dump_json()
 
-   # Convert to dictionary
-   data = task.model_dump()
+   # convert to dictionary
+   data = cat.model_dump()
 
-   # Parse from dictionary
-   task2 = Task.model_validate(data)
+   # parse from JSON string
+   cat2 = Cat.model_validate_json(j)
 
-   # Parse from JSON string
-   task3 = Task.model_validate_json(json_str)
-
-
-Exercise 1: Dump Tasks to JSON
-------------------------------
-
-Create a function that saves a list of tasks to a JSON file.
-Use the ``Task`` model from chapter 05:
-
-.. code-block:: python
-
-   import json
-   from pydantic import BaseModel
-   from datetime import datetime
-
-   class Task(BaseModel):
-       id: int
-       title: str
-       completed: bool = False
-       created_at: datetime
+   # parse from dictionary
+   cat3 = Cat.model_validate(data)
 
 
-   def save_tasks(tasks: list[Task], filename: str):
-       data = [task.model_dump(mode="json") for task in tasks]
-       with open(filename, "w") as f:
-           json.dump(data, f, indent=2)
+Exercise 1: Dump todo-lists to JSON
+-----------------------------------
 
-Test the function:
+Adapt the code above to implement two functions:
 
-.. code-block:: python
+- write todo-list data to a JSON file.
+- read todo-list data from a JSON file.
 
-   tasks = [
-       Task(id=1, title="Buy groceries", created_at=datetime.now()),
-       Task(id=2, title="Walk the dog", created_at=datetime.now()),
-   ]
-   save_tasks(tasks, "tasks.json")
 
 .. hint::
 
-   The ``mode="json"`` argument ensures that ``datetime`` objects are serialized as ISO strings.
+    To save an object with ``datetime`` attributes, use:
+
+    .. code-block:: python
+   
+       j = myobject.model_dump(mode="json")
+
+Test the function.
 
 
-Exercise 2: Load Tasks from JSON
---------------------------------
-
-Create a function that loads tasks from a JSON file:
-
-.. code-block:: python
-
-   def load_tasks(filename: str) -> list[Task]:
-       with open(filename, "r") as f:
-           data = json.load(f)
-       return [Task.model_validate(item) for item in data]
-
-Test the round-trip:
-
-.. code-block:: python
-
-   loaded = load_tasks("tasks.json")
-   print(loaded)
-
-
-Exercise 3: Store Tasks in DuckDB
+Exercise 2: Store Tasks in DuckDB
 ---------------------------------
 
-DuckDB is an embedded analytical database that requires no server setup.
-Install it:
+DuckDB is a lightweight database engine that requires no server setup.
+Install it with:
 
 .. code-block:: bash
 
    uv add duckdb
 
-Create a connection and store tasks:
+Create a connection and store tasks. Adapt the code to your data model:
 
 .. code-block:: python
 
@@ -131,13 +92,10 @@ Create a connection and store tasks:
    con.execute("""
        CREATE TABLE tasks (
            id INTEGER PRIMARY KEY,
-           title VARCHAR,
-           completed BOOLEAN,
-           created_at TIMESTAMP
+           ...
        )
    """)
 
-   # Insert a task
    task = Task(id=1, title="Buy groceries", completed=False, created_at=datetime.now())
    con.execute(
        "INSERT INTO tasks VALUES (?, ?, ?, ?)",
@@ -149,7 +107,7 @@ Create a connection and store tasks:
    For persistent storage, use ``duckdb.connect("tasks.db")`` instead.
 
 
-Exercise 4: Read Tasks from DuckDB
+Exercise 3: Read Tasks from DuckDB
 ----------------------------------
 
 Query tasks from the database and convert them back to Pydantic models:
@@ -163,45 +121,29 @@ Query tasks from the database and convert them back to Pydantic models:
            for row in result
        ]
 
-
    def get_task_by_id(con: duckdb.DuckDBPyConnection, task_id: int) -> Task | None:
-       result = con.execute(
-           "SELECT * FROM tasks WHERE id = ?", [task_id]
-       ).fetchone()
-       if result is None:
-           return None
-       return Task(id=result[0], title=result[1], completed=result[2], created_at=result[3])
-
-Test the queries:
-
-.. code-block:: python
-
-   tasks = get_all_tasks(con)
-   print(tasks)
-
-   task = get_task_by_id(con, 1)
-   print(task)
+       ...
+       
+Test the queries.
 
 
-Exercise 5: Implement a Repository Class
+Exercise 4: Implement a Repository Class
 ----------------------------------------
 
-Move the database code into a dedicated repository class:
+Move the database code into a dedicated repository class in a separate file ``repository.py``:
 
 .. code-block:: python
 
-   # repository.py
    import duckdb
-   from models import Task
 
 
    class TaskRepository:
 
        def __init__(self, db_path: str = ":memory:"):
            self.con = duckdb.connect(db_path)
-           self._create_table()
+           self.create_table()
 
-       def _create_table(self):
+       def create_table(self):
            self.con.execute("""
                CREATE TABLE IF NOT EXISTS tasks (
                    id INTEGER PRIMARY KEY,
@@ -212,94 +154,37 @@ Move the database code into a dedicated repository class:
            """)
 
        def add(self, task: Task) -> Task:
-           self.con.execute(
-               "INSERT INTO tasks VALUES (?, ?, ?, ?)",
-               [task.id, task.title, task.completed, task.created_at]
-           )
-           return task
+           ...
 
        def get(self, task_id: int) -> Task | None:
-           result = self.con.execute(
-               "SELECT * FROM tasks WHERE id = ?", [task_id]
-           ).fetchone()
-           if result is None:
-               return None
-           return Task(
-               id=result[0], title=result[1],
-               completed=result[2], created_at=result[3]
-           )
+           ...
 
        def get_all(self) -> list[Task]:
-           result = self.con.execute("SELECT * FROM tasks").fetchall()
-           return [
-               Task(id=r[0], title=r[1], completed=r[2], created_at=r[3])
-               for r in result
-           ]
+           ...
 
        def update(self, task: Task) -> Task:
-           self.con.execute(
-               "UPDATE tasks SET title=?, completed=? WHERE id=?",
-               [task.title, task.completed, task.id]
-           )
-           return task
+           ...
 
        def delete(self, task_id: int) -> bool:
-           result = self.con.execute(
-               "DELETE FROM tasks WHERE id = ? RETURNING id", [task_id]
-           ).fetchone()
-           return result is not None
+           ...
+
+.. note::
+
+    The repository functions may or may not match the resource model of your API.
+    Sometimes, you may need to map the database objects to entities of your resource layout.
+    The point of the Repository pattern is that both the data model and the resource model can change independently.
 
 
-Exercise 6: Use the Repository in FastAPI
+Exercise 5: Use the Repository in FastAPI
 -----------------------------------------
 
-Connect the repository to your API endpoints:
+Connect the repository to your API endpoints.
 
-.. code-block:: python
-
-   # app.py
-   from fastapi import FastAPI, HTTPException
-   from repository import TaskRepository
-   from models import Task, TaskCreate
-
-   app = FastAPI()
-   repo = TaskRepository("tasks.db")
+Make sure that your todo-items persist across server restarts.
 
 
-   @app.post("/tasks/", status_code=201)
-   def create_task(data: TaskCreate) -> Task:
-       task_id = len(repo.get_all()) + 1
-       task = Task(
-           id=task_id,
-           title=data.title,
-           created_at=datetime.now()
-       )
-       return repo.add(task)
-
-
-   @app.get("/tasks/{task_id}")
-   def get_task(task_id: int) -> Task:
-       task = repo.get(task_id)
-       if task is None:
-           raise HTTPException(status_code=404, detail="Task not found")
-       return task
-
-
-   @app.get("/tasks/")
-   def list_tasks() -> list[Task]:
-       return repo.get_all()
-
-
-   @app.delete("/tasks/{task_id}", status_code=204)
-   def delete_task(task_id: int):
-       if not repo.delete(task_id):
-           raise HTTPException(status_code=404, detail="Task not found")
-
-Test that tasks persist across server restarts.
-
-
-Exercise 7: Discussion - Schema Migrations
-------------------------------------------
+Exercise 6: Discuss Schema Migration
+------------------------------------
 
 When your data model changes (e.g., adding a ``due_date`` field), existing data in the database may become incompatible.
 
@@ -315,7 +200,7 @@ Discuss in your group:
 
 
 Reflection Questions
-++++++++++++++++++++
+--------------------
 
 - What are the advantages of the Repository Pattern?
 - How does the pattern make testing easier?
