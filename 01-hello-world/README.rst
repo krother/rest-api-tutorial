@@ -188,7 +188,7 @@ Now add the following endpoint, so that it returns a penguin entry:
     @app.get("/penguins/{penguin_id}")
     def get_penguin(penguin_id: int):
         selected = df.filter(id=penguin_id)
-        return selected.to_json()
+        return selected.to_dicts()
 
 Try out the endpoint as a raw URL or on the ``docs/`` page. You should be able to retrieve penguin records.
 
