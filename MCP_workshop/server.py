@@ -47,14 +47,72 @@ def get_anthropic_client() -> Anthropic:
 
 @mcp.tool
 def search_cats(query: str, k: int = 5) -> str:
-    """Semantic search over the local ChromaDB vector store, then summarize with Claude.
+    """Semantic search over the local ChromaDB vector store.
 
-    Implementation note: uses sentence-transformers for embedding the query,
-    ChromaDB for retrieval, and Claude for summarization with citations.
+    Returns raw search results with relevance scores. No API key needed.
+    Use this when the calling AI assistant can summarize the results.
+
+    Args:
+        query: The search query
+        k: Number of results to return (default 5)
+    """
+    # Check if collection has any documents
+    if collection.count() == 0:
+        return (
+            "No documents in the vector store. Run ingest.py first to add documents:\n"
+            "  python ingest.py your_document.pdf"
+        )
+
+    # Embed the query and search ChromaDB
+    try:
+        query_embedding = embedding_model.encode([query]).tolist()
+        results = collection.query(
+            query_embeddings=query_embedding,
+            n_results=k,
+            include=["documents", "metadatas", "distances"],
+        )
+    except Exception as exc:
+        return f"Vector store search failed: {exc}"
+
+    # Extract snippets from results
+    documents = results.get("documents", [[]])[0]
+    metadatas = results.get("metadatas", [[]])[0]
+    distances = results.get("distances", [[]])[0]
+
+    if not documents:
+        return "No results found in the vector store for the given query."
+
+    # Format results
+    output_lines = [f"Search results for: {query}\n"]
+    for idx, (doc, meta, dist) in enumerate(zip(documents, metadatas, distances)):
+        filename = meta.get("filename", "unknown")
+        chunk_idx = meta.get("chunk_idx", 0)
+        score = 1 / (1 + dist)  # Convert distance to similarity
+        preview = (doc or "").strip()
+        if len(preview) > 500:
+            preview = preview[:500] + " ..."
+        output_lines.append(
+            f"[Result {idx + 1}] file={filename} (chunk {chunk_idx}) score={score:.4f}\n{preview}\n"
+        )
+
+    return "\n".join(output_lines)
+
+
+@mcp.tool
+def search_cats_summarized(query: str, k: int = 5) -> str:
+    """Semantic search with Claude summarization (requires ANTHROPIC_API_KEY).
+
+    Searches the vector store and uses Claude to summarize results with citations.
+    Use this for autonomous RAG where you want a ready-to-use answer.
+
+    Args:
+        query: The search query
+        k: Number of results to retrieve before summarization (default 5)
     """
     if not ANTHROPIC_API_KEY:
         return (
-            "Anthropic API key not configured. Set ANTHROPIC_API_KEY in your .env file."
+            "Anthropic API key not configured. Set ANTHROPIC_API_KEY in your .env file.\n"
+            "Alternatively, use search_cats() which returns raw results without summarization."
         )
 
     # Check if collection has any documents
