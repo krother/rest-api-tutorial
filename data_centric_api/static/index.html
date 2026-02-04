@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Todo List</title>
+    <style>
+        :root {
+            --bg: #ffffff;
+            --bg-secondary: #f5f5f5;
+            --text: #333333;
+            --text-muted: #666666;
+            --border: #e0e0e0;
+            --accent: #4a90d9;
+            --accent-hover: #357abd;
+            --danger: #d9534f;
+            --success: #5cb85c;
+        }
+
+        [data-theme="dark"] {
+            --bg: #1a1a2e;
+            --bg-secondary: #16213e;
+            --text: #eaeaea;
+            --text-muted: #a0a0a0;
+            --border: #2a2a4a;
+            --accent: #4a90d9;
+            --accent-hover: #5da0e9;
+            --danger: #e74c3c;
+            --success: #2ecc71;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+            transition: background 0.3s, color 0.3s;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        h1 {
+            font-size: 1.8rem;
+            font-weight: 600;
+        }
+
+        .theme-toggle {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            color: var(--text);
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+        }
+
+        .theme-toggle:hover {
+            background: var(--border);
+        }
+
+        .panel {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .panel h2 {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--text);
+        }
+
+        .folder-color {
+            width: 12px;
+            height: 12px;
+            border-radius: 3px;
+            display: inline-block;
+            margin-right: 8px;
+        }
+
+        .list-items {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .item:hover {
+            border-color: var(--accent);
+        }
+
+        .item.selected {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 2px rgba(74, 144, 217, 0.2);
+        }
+
+        .task-item {
+            cursor: default;
+        }
+
+        .task-item input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+
+        .task-item.done .task-name {
+            text-decoration: line-through;
+            color: var(--text-muted);
+        }
+
+        .task-name {
+            flex: 1;
+        }
+
+        .task-due {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        .task-favorite {
+            color: var(--text-muted);
+            cursor: pointer;
+            font-size: 1.1rem;
+        }
+
+        .task-favorite.active {
+            color: #f1c40f;
+        }
+
+        .btn {
+            background: var(--accent);
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: background 0.2s;
+        }
+
+        .btn:hover {
+            background: var(--accent-hover);
+        }
+
+        .btn-small {
+            padding: 0.3rem 0.6rem;
+            font-size: 0.8rem;
+        }
+
+        .btn-danger {
+            background: var(--danger);
+        }
+
+        .btn-danger:hover {
+            background: #c9302c;
+        }
+
+        .add-form {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .add-form input {
+            flex: 1;
+            padding: 0.5rem 0.75rem;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            background: var(--bg);
+            color: var(--text);
+            font-size: 0.9rem;
+        }
+
+        .add-form input:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+
+        .breadcrumb {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+            margin-bottom: 1rem;
+            font-size: 0.9rem;
+            color: var(--text-muted);
+        }
+
+        .breadcrumb span {
+            cursor: pointer;
+        }
+
+        .breadcrumb span:hover {
+            color: var(--accent);
+        }
+
+        .breadcrumb .current {
+            color: var(--text);
+            font-weight: 500;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 2rem;
+            color: var(--text-muted);
+        }
+
+        .delete-btn {
+            opacity: 0;
+            background: none;
+            border: none;
+            color: var(--danger);
+            cursor: pointer;
+            padding: 0.25rem;
+            font-size: 1rem;
+            transition: opacity 0.2s;
+        }
+
+        .item:hover .delete-btn {
+            opacity: 1;
+        }
+
+        .columns {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+        }
+
+        @media (max-width: 700px) {
+            .columns {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Todo List</h1>
+            <button class="theme-toggle" onclick="toggleTheme()">Dark Mode</button>
+        </header>
+
+        <div class="columns">
+            <div class="panel">
+                <div class="panel-header">
+                    <h2>Folders</h2>
+                </div>
+                <div class="list-items" id="folders-list"></div>
+                <form class="add-form" onsubmit="addFolder(event)">
+                    <input type="text" id="folder-name" placeholder="New folder name" required>
+                    <input type="color" id="folder-color" value="#4a90d9" style="width: 40px; padding: 0.25rem;">
+                    <button type="submit" class="btn">Add</button>
+                </form>
+            </div>
+
+            <div class="panel">
+                <div class="panel-header">
+                    <h2>Lists</h2>
+                </div>
+                <div id="lists-container">
+                    <div class="empty-state">Select a folder</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="panel">
+            <div class="panel-header">
+                <h2>Tasks</h2>
+                <div class="breadcrumb" id="breadcrumb"></div>
+            </div>
+            <div id="tasks-container">
+                <div class="empty-state">Select a list to view tasks</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API = '';
+        let selectedFolder = null;
+        let selectedList = null;
+
+        // Theme
+        function toggleTheme() {
+            const html = document.documentElement;
+            const btn = document.querySelector('.theme-toggle');
+            if (html.getAttribute('data-theme') === 'dark') {
+                html.removeAttribute('data-theme');
+                btn.textContent = 'Dark Mode';
+                localStorage.setItem('theme', 'light');
+            } else {
+                html.setAttribute('data-theme', 'dark');
+                btn.textContent = 'Light Mode';
+                localStorage.setItem('theme', 'dark');
+            }
+        }
+
+        // Load saved theme
+        if (localStorage.getItem('theme') === 'dark') {
+            document.documentElement.setAttribute('data-theme', 'dark');
+            document.querySelector('.theme-toggle').textContent = 'Light Mode';
+        }
+
+        // API calls
+        async function fetchFolders() {
+            const res = await fetch(`${API}/folders/`);
+            return res.json();
+        }
+
+        async function fetchLists(folderId) {
+            const res = await fetch(`${API}/lists/`);
+            const lists = await res.json();
+            return lists.filter(l => l.folder_id === folderId);
+        }
+
+        async function fetchTasks(listId) {
+            const res = await fetch(`${API}/tasks/`);
+            const tasks = await res.json();
+            return tasks.filter(t => t.list_id === listId);
+        }
+
+        // Render functions
+        async function renderFolders() {
+            const folders = await fetchFolders();
+            const container = document.getElementById('folders-list');
+
+            if (folders.length === 0) {
+                container.innerHTML = '<div class="empty-state">No folders yet</div>';
+                return;
+            }
+
+            container.innerHTML = folders.map(f => `
+                <div class="item ${selectedFolder?.id === f.id ? 'selected' : ''}" onclick="selectFolder(${f.id})">
+                    <span class="folder-color" style="background: ${f.color || '#4a90d9'}"></span>
+                    <span style="flex: 1">${f.name}</span>
+                    <button class="delete-btn" onclick="deleteFolder(${f.id}, event)">×</button>
+                </div>
+            `).join('');
+        }
+
+        async function renderLists() {
+            const container = document.getElementById('lists-container');
+
+            if (!selectedFolder) {
+                container.innerHTML = '<div class="empty-state">Select a folder</div>';
+                return;
+            }
+
+            const lists = await fetchLists(selectedFolder.id);
+
+            container.innerHTML = `
+                <div class="list-items" id="lists-list">
+                    ${lists.length === 0 ? '<div class="empty-state">No lists yet</div>' :
+                    lists.map(l => `
+                        <div class="item ${selectedList?.id === l.id ? 'selected' : ''}" onclick="selectList(${l.id})">
+                            <span style="flex: 1">${l.name}</span>
+                            <button class="delete-btn" onclick="deleteList(${l.id}, event)">×</button>
+                        </div>
+                    `).join('')}
+                </div>
+                <form class="add-form" onsubmit="addList(event)">
+                    <input type="text" id="list-name" placeholder="New list name" required>
+                    <button type="submit" class="btn">Add</button>
+                </form>
+            `;
+        }
+
+        async function renderTasks() {
+            const container = document.getElementById('tasks-container');
+            const breadcrumb = document.getElementById('breadcrumb');
+
+            if (!selectedList) {
+                container.innerHTML = '<div class="empty-state">Select a list to view tasks</div>';
+                breadcrumb.innerHTML = '';
+                return;
+            }
+
+            breadcrumb.innerHTML = `
+                <span onclick="selectFolder(${selectedFolder.id})">${selectedFolder.name}</span>
+                <span>→</span>
+                <span class="current">${selectedList.name}</span>
+            `;
+
+            const tasks = await fetchTasks(selectedList.id);
+
+            container.innerHTML = `
+                <div class="list-items" id="tasks-list">
+                    ${tasks.length === 0 ? '<div class="empty-state">No tasks yet</div>' :
+                    tasks.map(t => `
+                        <div class="item task-item ${t.done ? 'done' : ''}">
+                            <input type="checkbox" ${t.done ? 'checked' : ''} onchange="toggleTask(${t.id}, this.checked)">
+                            <span class="task-name">${t.name}</span>
+                            ${t.due_date ? `<span class="task-due">${t.due_date}</span>` : ''}
+                            <span class="task-favorite ${t.favorite ? 'active' : ''}" onclick="toggleFavorite(${t.id}, ${!t.favorite})">★</span>
+                            <button class="delete-btn" style="opacity: 1" onclick="deleteTask(${t.id})">×</button>
+                        </div>
+                    `).join('')}
+                </div>
+                <form class="add-form" onsubmit="addTask(event)">
+                    <input type="text" id="task-name" placeholder="New task" required>
+                    <input type="date" id="task-due" style="width: auto">
+                    <button type="submit" class="btn">Add</button>
+                </form>
+            `;
+        }
+
+        // Selection
+        async function selectFolder(id) {
+            const folders = await fetchFolders();
+            selectedFolder = folders.find(f => f.id === id);
+            selectedList = null;
+            renderFolders();
+            renderLists();
+            renderTasks();
+        }
+
+        async function selectList(id) {
+            const res = await fetch(`${API}/lists/${id}/`);
+            selectedList = await res.json();
+            renderLists();
+            renderTasks();
+        }
+
+        // Add items
+        async function addFolder(e) {
+            e.preventDefault();
+            const name = document.getElementById('folder-name').value;
+            const color = document.getElementById('folder-color').value;
+
+            await fetch(`${API}/folders/`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id: 0, name, color, position_index: 0 })
+            });
+
+            document.getElementById('folder-name').value = '';
+            renderFolders();
+        }
+
+        async function addList(e) {
+            e.preventDefault();
+            const name = document.getElementById('list-name').value;
+
+            await fetch(`${API}/folders/${selectedFolder.id}/lists/`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id: 0, name, position: 0, folder_id: selectedFolder.id })
+            });
+
+            document.getElementById('list-name').value = '';
+            renderLists();
+        }
+
+        async function addTask(e) {
+            e.preventDefault();
+            const name = document.getElementById('task-name').value;
+            const due_date = document.getElementById('task-due').value || null;
+
+            await fetch(`${API}/lists/${selectedList.id}/tasks/`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id: 0, name, position: 0, list_id: selectedList.id, due_date })
+            });
+
+            document.getElementById('task-name').value = '';
+            document.getElementById('task-due').value = '';
+            renderTasks();
+        }
+
+        // Update items
+        async function toggleTask(id, done) {
+            await fetch(`${API}/tasks/${id}/`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ done })
+            });
+            renderTasks();
+        }
+
+        async function toggleFavorite(id, favorite) {
+            await fetch(`${API}/tasks/${id}/`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ favorite })
+            });
+            renderTasks();
+        }
+
+        // Delete items
+        async function deleteFolder(id, e) {
+            e.stopPropagation();
+            await fetch(`${API}/folders/${id}/`, { method: 'DELETE' });
+            if (selectedFolder?.id === id) {
+                selectedFolder = null;
+                selectedList = null;
+            }
+            renderFolders();
+            renderLists();
+            renderTasks();
+        }
+
+        async function deleteList(id, e) {
+            e.stopPropagation();
+            await fetch(`${API}/lists/${id}/`, { method: 'DELETE' });
+            if (selectedList?.id === id) {
+                selectedList = null;
+            }
+            renderLists();
+            renderTasks();
+        }
+
+        async function deleteTask(id) {
+            await fetch(`${API}/tasks/${id}/`, { method: 'DELETE' });
+            renderTasks();
+        }
+
+        // Initial render
+        renderFolders();
+    </script>
+</body>
+</html>
