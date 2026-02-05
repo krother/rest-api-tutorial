@@ -34,6 +34,52 @@ ANTHROPIC_MODEL: str = os.getenv("ANTHROPIC_MODEL", "claude-opus-4-5")
 
 mcp = FastMCP("Cats RAG")
 
+# =============================================================================
+# Simple demo: Favorite colors (data the model can't know without MCP!)
+# =============================================================================
+FAVORITE_COLORS = {
+    "Alice": "blue",
+    "Bob": "green", 
+    "Charlie": "purple",
+    "Diana": "orange",
+    "Eve": "red",
+    # Add workshop participants here!
+}
+
+
+@mcp.tool
+def get_favorite_color(name: str) -> str:
+    """Look up someone's favorite color from our secret database.
+    
+    This demonstrates MCP's power: the model cannot know this information
+    without calling this tool!
+    
+    Args:
+        name: The person's name to look up
+    """
+    # Case-insensitive lookup
+    for key, color in FAVORITE_COLORS.items():
+        if key.lower() == name.lower():
+            return f"{key}'s favorite color is {color}."
+    
+    available = ", ".join(FAVORITE_COLORS.keys())
+    return f"I don't have {name}'s favorite color. I know about: {available}"
+
+
+@mcp.tool
+def list_participants() -> str:
+    """List all participants whose favorite colors we know."""
+    if not FAVORITE_COLORS:
+        return "No participants registered yet."
+    
+    lines = ["Registered participants:"]
+    for name, color in FAVORITE_COLORS.items():
+        lines.append(f"  - {name}: {color}")
+    return "\n".join(lines)
+
+
+# =============================================================================
+
 
 def get_anthropic_client() -> Anthropic:
     """Create Anthropic client with optional Azure Foundry base URL."""

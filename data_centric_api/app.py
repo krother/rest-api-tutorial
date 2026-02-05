@@ -1,10 +1,12 @@
 from pathlib import Path
 
+import json
+
+import httpx
 from fastapi import FastAPI, HTTPException
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
-
-from datamodel import User, Folder, List, Task
+from models import User, Folder, List, Task, TransportResponse
 
 app = FastAPI()
 
@@ -268,3 +270,39 @@ def delete_task(task_id: int) -> None:
     if task_id not in tasks:
         raise HTTPException(status_code=404, detail="Task not found")
     del tasks[task_id]
+
+
+# ============== Dump to JSON ==============
+
+@app.post("/dump/")
+def dump_to_json():
+    """Dump all data to a JSON file."""
+    data = {
+        "users": [u.model_dump() for u in users.values()],
+        "folders": [f.model_dump() for f in folders.values()],
+        "lists": [l.model_dump() for l in lists.values()],
+        "tasks": [t.model_dump() for t in tasks.values()],
+    }
+    dump_path = Path(__file__).parent / "dump.json"
+    dump_path.write_text(json.dumps(data, indent=2, default=str))
+    return {"message": f"Data dumped to {dump_path.name}", "path": str(dump_path)}
+
+
+# ============== Transport Endpoints (BVG API) ==============
+
+@app.get("/transport/search")
+def search_transport(query: str)-> TransportResponse:
+    """Search for a stop/station in Berlin and return available transport types."""
+    response = httpx.get(
+        "https://v6.bvg.transport.rest/locations",
+        params={"query": query, "results": 1}
+    )
+    results = response.json()
+    if not results:
+        raise HTTPException(status_code=404, detail="No stops found")
+    stop = results[0]
+    products = stop.get("products", {})
+    transport = [mode for mode, available in products.items() if available]
+    return {"name": stop.get("name", query), "transport": transport}
+
+

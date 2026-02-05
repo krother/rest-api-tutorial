@@ -1,0 +1,18 @@
+{
+  "mcpServers": {
+    "cats-rag": {
+      "command": "uv",
+      "args": ["run", "--directory", "/Users/nikitagrabin/git23/rest-api-tutorial/MCP_workshop", "python", "server.py"],
+      "env": {
+        "MCP_TRANSPORT": "stdio"
+      }
+    },
+    "participants": {
+      "command": "uv",
+      "args": ["run", "--directory", "/Users/nikitagrabin/git23/rest-api-tutorial/MCP_workshop", "python", "server_simple.py"],
+      "env": {
+        "MCP_TRANSPORT": "stdio"
+      }
+    }
+  }
+}

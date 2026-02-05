@@ -4,6 +4,27 @@ A comprehensive, hands-on guide to building and running a RAG (Retrieval-Augment
 
 ---
 
+## Workshop Structure: Two Learning Paths
+
+This workshop offers **two entry points** depending on your experience level:
+
+### Quick Start: Simple Examples (Recommended First Step)
+
+Before diving into the full RAG system, we provide two minimal examples to help you understand the core concepts:
+
+| File | What it demonstrates |
+|------|---------------------|
+| `server_simple.py` | A minimal **MCP server** that exposes tools for looking up favorite colors. Shows how to create MCP tools with FastMCP decorators. |
+| `simple_chat.py` | A terminal **chat client** that calls the Anthropic API directly with tool definitions. Demonstrates the tool-use loop without any MCP infrastructure. |
+
+**Key distinction:**
+- `server_simple.py` is an **MCP server** — it runs as a service that MCP-compatible clients (Cursor, VS Code) connect to
+- `simple_chat.py` is a **standalone client** — it talks directly to Claude's API and handles tool calls in Python code
+
+Both examples use a simple "favorite colors" dataset to demonstrate how AI can access external data it couldn't otherwise know. Once you're comfortable with these concepts, proceed to the full RAG tutorial below.
+
+---
+
 ## Table of Contents
 
 1. [What You'll Build](#1-what-youll-build)
@@ -142,7 +163,6 @@ MCP_workshop/
 ├── pyproject.toml      # Python dependencies
 ├── .env                # Your API credentials (create from .env.example)
 ├── .env.example        # Template for .env
-├── .cursor/mcp.json    # Cursor IDE configuration
 ├── .vscode/mcp.json    # VS Code configuration
 ├── chroma_db/          # Vector database (created after first ingest)
 │   ├── chroma.sqlite3  # Main database file
@@ -322,7 +342,7 @@ If you have a direct Anthropic API key instead of Azure:
 ```bash
 ANTHROPIC_API_KEY=sk-ant-api03-xxxxx
 # Leave ANTHROPIC_BASE_URL empty or remove it
-ANTHROPIC_MODEL=claude-sonnet-4-20250514
+ANTHROPIC_MODEL=claude-opus-4-5
 ```
 
 ---
@@ -410,25 +430,10 @@ Processing: cats.pdf
 
 ## 7. Running the Server
 
-### 7.1 For IDE Use (Cursor/VS Code)
+### 7.1 For IDE Use (/VS Code)
 
 The IDE handles server startup automatically. Just configure the MCP settings:
 
-**For Cursor:** The file `.cursor/mcp.json` is already configured:
-```json
-{
-  "mcpServers": {
-    "cats-rag": {
-      "command": "uv",
-      "args": ["run", "python", "server.py"],
-      "cwd": "${workspaceFolder}/MCP_workshop",
-      "env": {
-        "MCP_TRANSPORT": "stdio"
-      }
-    }
-  }
-}
-```
 
 **For VS Code:** Same configuration in `.vscode/mcp.json`.
 
@@ -513,23 +518,10 @@ from server import search_cats
 # run the internal logic separately (see test script in README)
 ```
 
-### 8.4 Test via Cursor
-
-1. Open Cursor in the project folder
-2. Ensure MCP is configured (check `.cursor/mcp.json`)
-3. Open chat and ask: "Use search_cats to find information about cats"
-4. Cursor should invoke the tool and return results
-
 ---
 
 ## 9. Connecting to AI Clients
 
-### 9.1 Cursor IDE
-
-1. Ensure `.cursor/mcp.json` exists with the configuration
-2. Restart Cursor
-3. The "cats-rag" server appears in MCP tools
-4. Use in chat: "Search for [topic] in the documents"
 
 ### 9.2 VS Code
 
@@ -545,12 +537,6 @@ from server import search_cats
 3. In ChatGPT, create a Custom GPT with an Action
 4. Set the server URL to: `https://your-ngrok-url.ngrok.io/sse`
 5. ChatGPT can now use your MCP tools
-
-### 9.4 Claude Desktop
-
-1. Add server to Claude's MCP configuration
-2. Use stdio transport for local connection
-3. Restart Claude Desktop
 
 ---
 

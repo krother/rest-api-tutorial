@@ -1,5 +1,5 @@
 {
-  "mcpServers": {
+  "Servers": {
     "cats-rag": {
       "command": "uv",
       "args": ["run", "python", "server.py"],

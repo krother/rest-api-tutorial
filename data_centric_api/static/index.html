@@ -260,6 +260,54 @@
             opacity: 1;
         }
 
+        .task-location {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            font-style: italic;
+        }
+
+        .btn-transport {
+            background: var(--success);
+            padding: 0.2rem 0.5rem;
+            font-size: 0.75rem;
+        }
+
+        .btn-transport:hover {
+            background: #4cae4c;
+        }
+
+        .transport-results {
+            margin-top: 0.5rem;
+            padding: 0.75rem;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            font-size: 0.85rem;
+        }
+
+        .transport-results .transport-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.25rem 0;
+        }
+
+        .transport-badge {
+            padding: 0.15rem 0.4rem;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            color: white;
+        }
+
+        .transport-badge.subway { background: #0066cc; }
+        .transport-badge.tram { background: #cc0000; }
+        .transport-badge.bus { background: #993399; }
+        .transport-badge.suburban { background: #008800; }
+        .transport-badge.ferry { background: #0099cc; }
+        .transport-badge.express { background: #ff6600; }
+        .transport-badge.regional { background: #ff0000; }
+
         .columns {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -426,17 +474,21 @@
                 <div class="list-items" id="tasks-list">
                     ${tasks.length === 0 ? '<div class="empty-state">No tasks yet</div>' :
                     tasks.map(t => `
-                        <div class="item task-item ${t.done ? 'done' : ''}">
+                        <div class="item task-item ${t.done ? 'done' : ''}" id="task-${t.id}">
                             <input type="checkbox" ${t.done ? 'checked' : ''} onchange="toggleTask(${t.id}, this.checked)">
                             <span class="task-name">${t.name}</span>
+                            ${t.location ? `<span class="task-location">${t.location}</span>` : ''}
                             ${t.due_date ? `<span class="task-due">${t.due_date}</span>` : ''}
+                            ${t.location ? `<button class="btn btn-transport" onclick="getTransport(${t.id}, '${t.location}')">Get Transport</button>` : ''}
                             <span class="task-favorite ${t.favorite ? 'active' : ''}" onclick="toggleFavorite(${t.id}, ${!t.favorite})">★</span>
                             <button class="delete-btn" style="opacity: 1" onclick="deleteTask(${t.id})">×</button>
                         </div>
+                        <div id="transport-${t.id}"></div>
                     `).join('')}
                 </div>
                 <form class="add-form" onsubmit="addTask(event)">
                     <input type="text" id="task-name" placeholder="New task" required>
+                    <input type="text" id="task-location" placeholder="Location (e.g. Alexanderplatz)" style="width: 180px">
                     <input type="date" id="task-due" style="width: auto">
                     <button type="submit" class="btn">Add</button>
                 </form>
@@ -448,16 +500,16 @@
             const folders = await fetchFolders();
             selectedFolder = folders.find(f => f.id === id);
             selectedList = null;
-            renderFolders();
-            renderLists();
-            renderTasks();
+            await renderFolders();
+            await renderLists();
+            await renderTasks();
         }
 
         async function selectList(id) {
             const res = await fetch(`${API}/lists/${id}/`);
             selectedList = await res.json();
-            renderLists();
-            renderTasks();
+            await renderLists();
+            await renderTasks();
         }
 
         // Add items
@@ -473,7 +525,7 @@
             });
 
             document.getElementById('folder-name').value = '';
-            renderFolders();
+            await renderFolders();
         }
 
         async function addList(e) {
@@ -487,23 +539,25 @@
             });
 
             document.getElementById('list-name').value = '';
-            renderLists();
+            await renderLists();
         }
 
         async function addTask(e) {
             e.preventDefault();
             const name = document.getElementById('task-name').value;
+            const location = document.getElementById('task-location').value || null;
             const due_date = document.getElementById('task-due').value || null;
 
             await fetch(`${API}/lists/${selectedList.id}/tasks/`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ id: 0, name, position: 0, list_id: selectedList.id, due_date })
+                body: JSON.stringify({ id: 0, name, position: 0, list_id: selectedList.id, due_date, location })
             });
 
             document.getElementById('task-name').value = '';
+            document.getElementById('task-location').value = '';
             document.getElementById('task-due').value = '';
-            renderTasks();
+            await renderTasks();
         }
 
         // Update items
@@ -513,7 +567,7 @@
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ done })
             });
-            renderTasks();
+            await renderTasks();
         }
 
         async function toggleFavorite(id, favorite) {
@@ -522,7 +576,36 @@
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ favorite })
             });
-            renderTasks();
+            await renderTasks();
+        }
+
+        async function getTransport(taskId, location) {
+            const container = document.getElementById(`transport-${taskId}`);
+            container.innerHTML = '<div class="transport-results">Loading...</div>';
+
+            const res = await fetch(`${API}/transport/search?query=${encodeURIComponent(location)}`);
+            if (!res.ok) {
+                container.innerHTML = '<div class="transport-results">No stops found</div>';
+                return;
+            }
+            const stop = await res.json();
+
+            if (stop.transport.length === 0) {
+                container.innerHTML = `<div class="transport-results">
+                    <strong>${stop.name}</strong><br>
+                    No public transport available
+                </div>`;
+                return;
+            }
+
+            container.innerHTML = `
+                <div class="transport-results">
+                    <strong>${stop.name}</strong>
+                    <div class="transport-item">
+                        ${stop.transport.map(type => `<span class="transport-badge ${type}">${type}</span>`).join('')}
+                    </div>
+                </div>
+            `;
         }
 
         // Delete items
@@ -533,9 +616,9 @@
                 selectedFolder = null;
                 selectedList = null;
             }
-            renderFolders();
-            renderLists();
-            renderTasks();
+            await renderFolders();
+            await renderLists();
+            await renderTasks();
         }
 
         async function deleteList(id, e) {
@@ -544,13 +627,13 @@
             if (selectedList?.id === id) {
                 selectedList = null;
             }
-            renderLists();
-            renderTasks();
+            await renderLists();
+            await renderTasks();
         }
 
         async function deleteTask(id) {
             await fetch(`${API}/tasks/${id}/`, { method: 'DELETE' });
-            renderTasks();
+            await renderTasks();
         }
 
         // Initial render

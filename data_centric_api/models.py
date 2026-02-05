@@ -1,5 +1,6 @@
 from datetime import date
 from pydantic import BaseModel
+    
 
 
 class User(BaseModel):
@@ -35,3 +36,9 @@ class Task(BaseModel):
     position: int
     favorite: bool = False
     list_id: int  # 1:M relationship (belongs to one List)
+    location: str | None = None  # Optional location for transport lookup
+
+class TransportResponse(BaseModel):
+    name: str
+    transport: list[str]
+    
