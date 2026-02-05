@@ -15,7 +15,7 @@ The **BCE Pattern (Boundary-Control-Entity)** separates your code into three lay
    flowchart LR
        subgraph Boundary
            A[API endpoints]
-           B[top-level service functions]
+           B[top-level functions]
        end
        subgraph Control
            C[Services]
