@@ -82,19 +82,24 @@ def chunk_text(text: str, chunk_size: int = CHUNK_SIZE, overlap: int = CHUNK_OVE
     text_len = len(text)
 
     while start < text_len:
-        end = start + chunk_size
+        end = min(start + chunk_size, text_len)
 
-        # Try to break at sentence or word boundary
+        # Try to break at sentence or word boundary (only if not at end)
         if end < text_len:
-            # Look for sentence boundary
+            # Look for sentence boundary in the last 100 chars of the chunk
+            search_start = max(start, end - 100)
+            best_boundary = -1
+            
             for sep in [". ", ".\n", "! ", "!\n", "? ", "?\n", "\n\n"]:
-                boundary = text.rfind(sep, start, end)
-                if boundary > start:
-                    end = boundary + len(sep)
-                    break
+                boundary = text.rfind(sep, search_start, end)
+                if boundary > best_boundary:
+                    best_boundary = boundary + len(sep)
+            
+            if best_boundary > start:
+                end = best_boundary
             else:
                 # Fall back to word boundary
-                space = text.rfind(" ", start, end)
+                space = text.rfind(" ", search_start, end)
                 if space > start:
                     end = space + 1
 
@@ -102,8 +107,11 @@ def chunk_text(text: str, chunk_size: int = CHUNK_SIZE, overlap: int = CHUNK_OVE
         if chunk:
             chunks.append(chunk)
 
-        # Move start position with overlap
-        start = end - overlap if end < text_len else text_len
+        # Move start position - ensure we always make progress
+        next_start = end - overlap
+        if next_start <= start:
+            next_start = end  # Ensure forward progress
+        start = next_start if end < text_len else text_len
 
     return chunks
 

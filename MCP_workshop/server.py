@@ -34,6 +34,52 @@ ANTHROPIC_MODEL: str = os.getenv("ANTHROPIC_MODEL", "claude-opus-4-5")
 
 mcp = FastMCP("Cats RAG")
 
+# =============================================================================
+# Simple demo: Favorite colors (data the model can't know without MCP!)
+# =============================================================================
+FAVORITE_COLORS = {
+    "Alice": "blue",
+    "Bob": "green", 
+    "Charlie": "purple",
+    "Diana": "orange",
+    "Eve": "red",
+    # Add workshop participants here!
+}
+
+
+@mcp.tool
+def get_favorite_color(name: str) -> str:
+    """Look up someone's favorite color from our secret database.
+    
+    This demonstrates MCP's power: the model cannot know this information
+    without calling this tool!
+    
+    Args:
+        name: The person's name to look up
+    """
+    # Case-insensitive lookup
+    for key, color in FAVORITE_COLORS.items():
+        if key.lower() == name.lower():
+            return f"{key}'s favorite color is {color}."
+    
+    available = ", ".join(FAVORITE_COLORS.keys())
+    return f"I don't have {name}'s favorite color. I know about: {available}"
+
+
+@mcp.tool
+def list_participants() -> str:
+    """List all participants whose favorite colors we know."""
+    if not FAVORITE_COLORS:
+        return "No participants registered yet."
+    
+    lines = ["Registered participants:"]
+    for name, color in FAVORITE_COLORS.items():
+        lines.append(f"  - {name}: {color}")
+    return "\n".join(lines)
+
+
+# =============================================================================
+
 
 def get_anthropic_client() -> Anthropic:
     """Create Anthropic client with optional Azure Foundry base URL."""
@@ -47,14 +93,72 @@ def get_anthropic_client() -> Anthropic:
 
 @mcp.tool
 def search_cats(query: str, k: int = 5) -> str:
-    """Semantic search over the local ChromaDB vector store, then summarize with Claude.
+    """Semantic search over the local ChromaDB vector store.
 
-    Implementation note: uses sentence-transformers for embedding the query,
-    ChromaDB for retrieval, and Claude for summarization with citations.
+    Returns raw search results with relevance scores. No API key needed.
+    Use this when the calling AI assistant can summarize the results.
+
+    Args:
+        query: The search query
+        k: Number of results to return (default 5)
+    """
+    # Check if collection has any documents
+    if collection.count() == 0:
+        return (
+            "No documents in the vector store. Run ingest.py first to add documents:\n"
+            "  python ingest.py your_document.pdf"
+        )
+
+    # Embed the query and search ChromaDB
+    try:
+        query_embedding = embedding_model.encode([query]).tolist()
+        results = collection.query(
+            query_embeddings=query_embedding,
+            n_results=k,
+            include=["documents", "metadatas", "distances"],
+        )
+    except Exception as exc:
+        return f"Vector store search failed: {exc}"
+
+    # Extract snippets from results
+    documents = results.get("documents", [[]])[0]
+    metadatas = results.get("metadatas", [[]])[0]
+    distances = results.get("distances", [[]])[0]
+
+    if not documents:
+        return "No results found in the vector store for the given query."
+
+    # Format results
+    output_lines = [f"Search results for: {query}\n"]
+    for idx, (doc, meta, dist) in enumerate(zip(documents, metadatas, distances)):
+        filename = meta.get("filename", "unknown")
+        chunk_idx = meta.get("chunk_idx", 0)
+        score = 1 / (1 + dist)  # Convert distance to similarity
+        preview = (doc or "").strip()
+        if len(preview) > 500:
+            preview = preview[:500] + " ..."
+        output_lines.append(
+            f"[Result {idx + 1}] file={filename} (chunk {chunk_idx}) score={score:.4f}\n{preview}\n"
+        )
+
+    return "\n".join(output_lines)
+
+
+@mcp.tool
+def search_cats_summarized(query: str, k: int = 5) -> str:
+    """Semantic search with Claude summarization (requires ANTHROPIC_API_KEY).
+
+    Searches the vector store and uses Claude to summarize results with citations.
+    Use this for autonomous RAG where you want a ready-to-use answer.
+
+    Args:
+        query: The search query
+        k: Number of results to retrieve before summarization (default 5)
     """
     if not ANTHROPIC_API_KEY:
         return (
-            "Anthropic API key not configured. Set ANTHROPIC_API_KEY in your .env file."
+            "Anthropic API key not configured. Set ANTHROPIC_API_KEY in your .env file.\n"
+            "Alternatively, use search_cats() which returns raw results without summarization."
         )
 
     # Check if collection has any documents
