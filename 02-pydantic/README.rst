@@ -129,7 +129,7 @@ Extend your model to include optional fields and fields with default values:
         island: str = "Biscoe"               # optional with default value
 
 Add these fields and test the endpoint with different combinations.
-**Do not** pass the new fields to the prediction. *
+**Do not** pass the new fields to the prediction.
 
 Here is an according curl request:
 
@@ -217,7 +217,7 @@ For even stricter quality checks, add a validator to ensure the penguin body mas
         @classmethod
         def validate_body_mass(cls, v):
             if v < 100 or v > 20000:
-                raise ValueError("body_mass must be between 500g and 20000g")
+                raise ValueError("body_mass must be between 100g and 20000g")
             return v
 
 Test the validator:
@@ -259,7 +259,7 @@ Pydantic offers two ways to add constraints without writing custom validators:
     from typing import Annotated
     from pydantic import Field
 
-    Probability = Annotated[float, Field(ge=0, le=1, description="Predicted proobability of a penguin species")]
+    Probability = Annotated[float, Field(ge=0, le=1, description="Predicted probability of a penguin species")]
 
 
     class PredictionOutput(BaseModel):

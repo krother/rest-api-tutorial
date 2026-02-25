@@ -5,7 +5,7 @@ Building powerful APIs with Python and FastAPI.
 
 Course Goals
 ------------
-This tutorial enables participants to develop modern REST API interfaces in Pyhon and to make their own applications available as microservices. Beyond the basics of the FastAPI library, the tutorial focuses on: the development of validated data exchange models with pydantic, clean API architectures including authentication and error handling layers, and the inclusion of scalable Machine Learning models and LLMs that allow asynchronous requests.
+This tutorial enables participants to develop modern REST API interfaces in Python and to make their own applications available as microservices. Beyond the basics of the FastAPI library, the tutorial focuses on: the development of validated data exchange models with pydantic, clean API architectures including authentication and error handling layers, and the inclusion of scalable Machine Learning models and LLMs that allow asynchronous requests.
 
 The tutorial is tailored towards participants with intermediate knowledge of Python.
 

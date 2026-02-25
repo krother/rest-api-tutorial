@@ -51,7 +51,7 @@ Initialize the project with ``uv``:
 
 Update ``pyproject.toml``:
 
-.. literalinclude: pyproject.toml
+.. literalinclude:: pyproject.toml
 
 Exercise 2: Create the Folder Structure
 ---------------------------------------
@@ -64,9 +64,9 @@ Set up the following folder structure:
    my_project/
    ├── pyproject.toml
    ├── README.md
-   └── my_app/
-       └── app.py
-       └── pingu_predictor/
+   ├── my_app/
+       ├── app.py
+       ├── pingu_predictor/
            ├── __init__.py
            ├── endpoints.py
            ├── boundary.py
@@ -79,7 +79,7 @@ Set up the following folder structure:
            ├── models.py
            └── services.py
    └── tests/
-       └── test_pingu_predictor.py
+       ├── test_pingu_predictor.py
        └── test_todo_list.py
 
 
@@ -123,7 +123,7 @@ In the main ``app.py``, you need to import your endpoints:
 
 .. seealso::
 
-    `FastAPI guid to distribute an app over multiple modules <https://fastapi.tiangolo.com/tutorial/bigger-applications/#apirouter>`__
+    `FastAPI guide to distribute an app over multiple modules <https://fastapi.tiangolo.com/tutorial/bigger-applications/#apirouter>`__
 
 
 Exercise 4: Define Boundaries

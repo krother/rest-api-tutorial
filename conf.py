@@ -41,6 +41,6 @@ html_css_files = [
 ]
 html_theme_options = {
     "source_repository": "https://github.com/krother/rest-api-tutorial",
-    "source_branch": "maing",
+    "source_branch": "main",
     "source_directory": "",
 }

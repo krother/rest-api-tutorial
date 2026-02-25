@@ -1,6 +1,6 @@
 
 
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 
 import json
 import os
@@ -29,4 +29,4 @@ def songs(query: str):
         ):
             return song
     
-    raise IndexError(f"song {query} not found!")
+    raise HTTPException(status_code=404, detail=f"song {query} not found")

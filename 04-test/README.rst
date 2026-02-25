@@ -209,8 +209,9 @@ You can also use the ``mocker`` fixture from pytest-mock:
 
 .. code-block:: python
 
-    def test_with_mocker(client, valid_penguin_data, mocker):
-        mocker.patch("app.predict_species", return_value=valid_prediction):
+    def test_with_mocker(client, valid_penguin, mocker):
+        mocker.patch("app.predict_species", return_value="Gentoo")
+        response = client.post("/penguins/predict", json=valid_penguin)
         ...
 
 

@@ -104,12 +104,9 @@ Reflection Questions
 - When would blocking ``time.sleep()`` be a problem in production?
 - How would you handle a mix of CPU-heavy and I/O-heavy operations?
 - What happens if an async endpoint calls a blocking function?
-- how to do performance tuning (threadpool vs async)
+- how would you tune performance (thread pool vs async)?
 
 .. seealso::
 
-   `FastAPI Async Documentation <https://fastapi.tiangolo.com/async/>`_
-
-TODO: document some extra ideas 
-- tODO: rate limiting and request throttling (slowapi)
-https://github.com/laurentS/slowapi
+   - `FastAPI Async Documentation <https://fastapi.tiangolo.com/async/>`_
+   - `rate limiting and request throttling with slowapi <https://github.com/laurentS/slowapi>`__
