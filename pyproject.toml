@@ -1,8 +1,4 @@
 
-[build-system]
-requires = ["hatchling"]
-build-backend = "hatchling.build"
-
 [project]
 name = "rest-api-tutorial"
 version = "0.1.0"
